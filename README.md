@@ -1,3 +1,7 @@
+<p align="center">
+  <img src="KeyPress/AppIcon.png" width="96" alt="KeyPress icon">
+</p>
+
 # KeyPress
 
 A Windows Forms utility that shows live input from your keyboard, mouse, touchscreen, and
