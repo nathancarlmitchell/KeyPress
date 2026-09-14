@@ -1,5 +1,4 @@
 using System.Runtime.InteropServices;
-using System.Text.Json;
 
 namespace KeyPress
 {
@@ -10,6 +9,23 @@ namespace KeyPress
 
         // Mouse buttons currently held down, in the order they were pressed.
         private readonly List<MouseButtons> heldButtons = new();
+
+        // Virtual on-screen keyboard, sandwiched between the pressed/released text
+        // lines. Built entirely in code (see BuildVirtualKeyboard) rather than in
+        // the Designer, since it's a couple hundred small key labels laid out from
+        // data. WinForms collapses left/right Shift/Ctrl/Alt to one generic KeyCode
+        // (Keys.ShiftKey/ControlKey/Menu), so both visual keycaps for those map to
+        // the same logical key and light up together — the same simplification the
+        // rest of the app already makes for those keys.
+        private readonly Dictionary<Keys, List<Label>> keyboardKeyLabels = new();
+        private readonly Dictionary<MouseButtons, List<Label>> keyboardMouseButtonLabels = new();
+        private Label mouseScrollUpLabel = null!;
+        private Label mouseScrollDownLabel = null!;
+        private readonly System.Windows.Forms.Timer scrollFlashTimer = new() { Interval = 220 };
+        private Panel keyboardPanel = null!;
+        private Panel keyboardGrid = null!;
+        private static readonly Color KeyboardKeyBackColor = SystemColors.Window;
+        private static readonly Color KeyboardKeyForeColor = SystemColors.ControlText;
 
         // Active touch / pen / touchpad contacts, by pointer id.
         private readonly Dictionary<uint, string> activePointers = new();
@@ -126,23 +142,98 @@ namespace KeyPress
             Path.Combine(
                 Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
                 "KeyPress",
-                "settings.json"
+                "settings.ini"
             );
 
+        // Plain "Key=Value" lines rather than JSON — the format doesn't need a
+        // parser library for a handful of scalar fields, and dropping
+        // System.Text.Json keeps the net48 build to just the exe.
         private static AppSettings? LoadSettings()
         {
             try
             {
                 string path = SettingsFilePath;
-                return File.Exists(path)
-                    ? JsonSerializer.Deserialize<AppSettings>(File.ReadAllText(path))
-                    : null;
+                if (!File.Exists(path))
+                {
+                    return null;
+                }
+
+                var values = new Dictionary<string, string>();
+                foreach (string line in File.ReadAllLines(path))
+                {
+                    int separatorIndex = line.IndexOf('=');
+                    if (separatorIndex <= 0)
+                    {
+                        continue;
+                    }
+                    string key = line.Substring(0, separatorIndex).Trim();
+                    string value = line.Substring(separatorIndex + 1).Trim();
+                    values[key] = value;
+                }
+
+                // Only ever overwrite an AppSettings default when the key is
+                // actually present and valid — a settings file saved before a
+                // field existed (or a corrupt single line) should fall back to
+                // that field's own default, not zero it out.
+                var settings = new AppSettings();
+                if (ParseInt(values, nameof(AppSettings.WindowWidth)) is int width)
+                {
+                    settings.WindowWidth = width;
+                }
+                if (ParseInt(values, nameof(AppSettings.WindowHeight)) is int height)
+                {
+                    settings.WindowHeight = height;
+                }
+                if (ParseBool(values, nameof(AppSettings.Maximized)) is bool maximized)
+                {
+                    settings.Maximized = maximized;
+                }
+                if (ParseBool(values, nameof(AppSettings.ShowCursor)) is bool showCursor)
+                {
+                    settings.ShowCursor = showCursor;
+                }
+                if (ParseBool(values, nameof(AppSettings.ShowTrackpad)) is bool showTrackpad)
+                {
+                    settings.ShowTrackpad = showTrackpad;
+                }
+                if (ParseBool(values, nameof(AppSettings.ShowTrackpadRaw)) is bool showTrackpadRaw)
+                {
+                    settings.ShowTrackpadRaw = showTrackpadRaw;
+                }
+                if (ParseBool(values, nameof(AppSettings.ShowTouchScreen)) is bool showTouchScreen)
+                {
+                    settings.ShowTouchScreen = showTouchScreen;
+                }
+                if (
+                    ParseBool(values, nameof(AppSettings.ShowKeyPressText)) is bool showKeyPressText
+                )
+                {
+                    settings.ShowKeyPressText = showKeyPressText;
+                }
+                if (
+                    ParseBool(values, nameof(AppSettings.ShowKeyReleaseText))
+                    is bool showKeyReleaseText
+                )
+                {
+                    settings.ShowKeyReleaseText = showKeyReleaseText;
+                }
+                return settings;
             }
             catch
             {
                 return null; // Missing, corrupt, or unreadable — just use defaults.
             }
         }
+
+        private static int? ParseInt(Dictionary<string, string> values, string key) =>
+            values.TryGetValue(key, out string? raw) && int.TryParse(raw, out int parsed)
+                ? parsed
+                : null;
+
+        private static bool? ParseBool(Dictionary<string, string> values, string key) =>
+            values.TryGetValue(key, out string? raw) && bool.TryParse(raw, out bool parsed)
+                ? parsed
+                : null;
 
         private void SaveSettings()
         {
@@ -166,12 +257,20 @@ namespace KeyPress
 
                 string path = SettingsFilePath;
                 Directory.CreateDirectory(Path.GetDirectoryName(path)!);
-                File.WriteAllText(
+                File.WriteAllLines(
                     path,
-                    JsonSerializer.Serialize(
-                        settings,
-                        new JsonSerializerOptions { WriteIndented = true }
-                    )
+                    new[]
+                    {
+                        $"{nameof(AppSettings.WindowWidth)}={settings.WindowWidth}",
+                        $"{nameof(AppSettings.WindowHeight)}={settings.WindowHeight}",
+                        $"{nameof(AppSettings.Maximized)}={settings.Maximized}",
+                        $"{nameof(AppSettings.ShowCursor)}={settings.ShowCursor}",
+                        $"{nameof(AppSettings.ShowTrackpad)}={settings.ShowTrackpad}",
+                        $"{nameof(AppSettings.ShowTrackpadRaw)}={settings.ShowTrackpadRaw}",
+                        $"{nameof(AppSettings.ShowTouchScreen)}={settings.ShowTouchScreen}",
+                        $"{nameof(AppSettings.ShowKeyPressText)}={settings.ShowKeyPressText}",
+                        $"{nameof(AppSettings.ShowKeyReleaseText)}={settings.ShowKeyReleaseText}",
+                    }
                 );
             }
             catch
@@ -189,7 +288,18 @@ namespace KeyPress
         {
             InitializeComponent();
 
+            // Pulled from the exe's own Win32 icon resource (embedded via the
+            // csproj's ApplicationIcon) rather than a second copy baked into
+            // Form1.resx as a binary resource — that binary-resource path is
+            // what pulled in the System.Resources.Extensions dependency on
+            // net48, so extracting it at runtime keeps this a single exe.
+            Icon = Icon.ExtractAssociatedIcon(Application.ExecutablePath);
+
             defaultWindowSize = Size;
+
+            AddBoxIcon(trackpadSurface, BoxIconKind.Trackpad);
+            AddBoxIcon(trackpadRawSurface, BoxIconKind.Trackpad);
+            AddBoxIcon(touchSurface, BoxIconKind.TouchScreen);
 
             releaseBaseColor = releaseLabel.ForeColor;
             displayBaseColor = displayLabel.ForeColor;
@@ -256,6 +366,10 @@ namespace KeyPress
             ClientSizeChanged += (s, e) => CenterBoxesPanel();
             CenterBoxesPanel();
 
+            BuildVirtualKeyboard();
+            ClientSizeChanged += (s, e) => CenterKeyboardGrid();
+            CenterKeyboardGrid();
+
             KeyPreview = true;
             KeyDown += Form1_KeyDown;
             KeyUp += Form1_KeyUp;
@@ -305,15 +419,33 @@ namespace KeyPress
                 AddRelease(scrollIdleLabel + " stopped");
             };
 
+            scrollFlashTimer.Tick += (s, e) =>
+            {
+                scrollFlashTimer.Stop();
+                SetScrollIndicatorActive(mouseScrollUpLabel, false);
+                SetScrollIndicatorActive(mouseScrollDownLabel, false);
+            };
+
             Deactivate += (s, e) =>
             {
                 heldKeys.Clear();
                 heldButtons.Clear();
                 activePointers.Clear();
+                foreach (Keys key in keyboardKeyLabels.Keys)
+                {
+                    HighlightVirtualKey(key, false);
+                }
+                foreach (MouseButtons button in keyboardMouseButtonLabels.Keys)
+                {
+                    HighlightVirtualMouseButton(button, false);
+                }
                 ClearAllTouches();
                 noticeTimer.Stop();
                 transientNotice = "";
                 scrollIdleTimer.Stop();
+                scrollFlashTimer.Stop();
+                SetScrollIndicatorActive(mouseScrollUpLabel, false);
+                SetScrollIndicatorActive(mouseScrollDownLabel, false);
                 releaseTimer.Stop();
                 fadeTimer.Stop();
                 releasedItems.Clear();
@@ -1012,6 +1144,10 @@ namespace KeyPress
                     scrollIdleLabel = vertical ? "Mouse Wheel" : "Mouse Wheel (horizontal)";
                     scrollIdleTimer.Stop();
                     scrollIdleTimer.Start();
+                    if (vertical)
+                    {
+                        FlashVirtualScroll(delta > 0);
+                    }
                     break;
                 }
 
@@ -1042,8 +1178,9 @@ namespace KeyPress
                 case WM_POINTERLEAVE:
                 {
                     uint id = (uint)((long)m.WParam & 0xFFFF);
-                    if (activePointers.Remove(id, out string? label))
+                    if (activePointers.TryGetValue(id, out string? label))
                     {
+                        activePointers.Remove(id);
                         // Report "stopped" once the last contact of this kind lifts.
                         if (!activePointers.ContainsValue(label))
                         {
@@ -1145,7 +1282,7 @@ namespace KeyPress
         {
             double fraction =
                 (DateTime.UtcNow - releaseShownAt).TotalMilliseconds / releaseTimer.Interval;
-            fraction = Math.Clamp(fraction, 0.0, 1.0);
+            fraction = Clamp(fraction, 0.0, 1.0);
 
             double blend = fraction * (1.0 - IdleFadeMinOpacity);
             releaseLabel.ForeColor = Lerp(releaseBaseColor, BackColor, blend);
@@ -1161,7 +1298,7 @@ namespace KeyPress
         private void UpdateIdleFade()
         {
             double fraction = (DateTime.UtcNow - idleSince).TotalMilliseconds / IdleFadeDurationMs;
-            fraction = Math.Clamp(fraction, 0.0, 1.0);
+            fraction = Clamp(fraction, 0.0, 1.0);
 
             // fraction 0 -> full opacity (blend 0, i.e. displayBaseColor itself);
             // fraction 1 -> IdleFadeMinOpacity (blend (1 - min) toward the background).
@@ -1181,6 +1318,17 @@ namespace KeyPress
                 (int)(from.B + (to.B - from.B) * t)
             );
 
+        // net48's Math class predates Math.Clamp (added in .NET Core 2.0).
+        private static double Clamp(double value, double min, double max) =>
+            value < min ? min
+            : value > max ? max
+            : value;
+
+        private static int Clamp(int value, int min, int max) =>
+            value < min ? min
+            : value > max ? max
+            : value;
+
         // ---- Keyboard / mouse-button events ----------------------------------
 
         private void Form1_KeyDown(object? sender, KeyEventArgs e)
@@ -1190,6 +1338,7 @@ namespace KeyPress
                 heldKeys.Add(e.KeyCode);
                 UpdateDisplay();
             }
+            HighlightVirtualKey(e.KeyCode, true);
 
             // Don't let the key also type into the display.
             e.Handled = true;
@@ -1199,6 +1348,7 @@ namespace KeyPress
         private void Form1_KeyUp(object? sender, KeyEventArgs e)
         {
             heldKeys.Remove(e.KeyCode);
+            HighlightVirtualKey(e.KeyCode, false);
             AddRelease(e.KeyCode.ToString());
         }
 
@@ -1207,6 +1357,7 @@ namespace KeyPress
             if (!heldButtons.Contains(e.Button))
             {
                 heldButtons.Add(e.Button);
+                HighlightVirtualMouseButton(e.Button, true);
                 UpdateDisplay();
             }
         }
@@ -1215,6 +1366,7 @@ namespace KeyPress
         {
             if (heldButtons.Remove(e.Button))
             {
+                HighlightVirtualMouseButton(e.Button, false);
                 AddRelease(MouseButtonName(e.Button));
             }
         }
@@ -1238,8 +1390,8 @@ namespace KeyPress
             int y = (int)Math.Round(fy * (clientSize.Height - dotSize.Height));
 
             return new Point(
-                Math.Clamp(x, 0, clientSize.Width - dotSize.Width),
-                Math.Clamp(y, 0, clientSize.Height - dotSize.Height)
+                Clamp(x, 0, clientSize.Width - dotSize.Width),
+                Clamp(y, 0, clientSize.Height - dotSize.Height)
             );
         }
 
@@ -1254,6 +1406,381 @@ namespace KeyPress
             // it onto additional rows instead of overflowing past the edge.
             boxesPanel.MaximumSize = new Size(Math.Max(1, ClientSize.Width), 0);
             boxesPanel.Left = Math.Max(0, (ClientSize.Width - boxesPanel.Width) / 2);
+        }
+
+        // ---- Virtual keyboard ---------------------------------------------------
+
+        // One keyboard-unit's pixel size (a standard 1u key). Row widths below are
+        // expressed as multiples of this, matching real keyboard key proportions
+        // (e.g. Tab = 1.5u, Enter = 2.25u, Space = 6.25u) so the layout reads as an
+        // actual keyboard rather than an arbitrary grid.
+        private const int KeyUnit = 26;
+        private const int KeyGap = 3;
+
+        // Builds the on-screen keyboard from data (function row through the bottom
+        // row, plus an arrow cluster) and drops it into a Dock.Bottom panel sitting
+        // directly above releaseLabel — since releaseLabel is added to the form
+        // earlier (in the Designer), adding keyboardPanel afterward here means it
+        // claims its Dock.Bottom slice from whatever space releaseLabel left,
+        // landing it just above releaseLabel rather than competing for the same
+        // strip. displayLabel (Dock.Fill) ends up occupying whatever's left above
+        // both, which is exactly "between" the two text lines.
+        private void BuildVirtualKeyboard()
+        {
+            keyboardGrid = new Panel { BackColor = Color.Transparent };
+
+            int rowHeight = KeyUnit - KeyGap;
+            int y = 0;
+
+            AddKeyRow(
+                y,
+                rowHeight,
+                ("Esc", 1f, Keys.Escape),
+                ("", 0.5f, Keys.None),
+                ("F1", 1f, Keys.F1),
+                ("F2", 1f, Keys.F2),
+                ("F3", 1f, Keys.F3),
+                ("F4", 1f, Keys.F4),
+                ("", 0.5f, Keys.None),
+                ("F5", 1f, Keys.F5),
+                ("F6", 1f, Keys.F6),
+                ("F7", 1f, Keys.F7),
+                ("F8", 1f, Keys.F8),
+                ("", 0.5f, Keys.None),
+                ("F9", 1f, Keys.F9),
+                ("F10", 1f, Keys.F10),
+                ("F11", 1f, Keys.F11),
+                ("F12", 1f, Keys.F12)
+            );
+            y += KeyUnit;
+
+            AddKeyRow(
+                y,
+                rowHeight,
+                ("`", 1f, Keys.Oemtilde),
+                ("1", 1f, Keys.D1),
+                ("2", 1f, Keys.D2),
+                ("3", 1f, Keys.D3),
+                ("4", 1f, Keys.D4),
+                ("5", 1f, Keys.D5),
+                ("6", 1f, Keys.D6),
+                ("7", 1f, Keys.D7),
+                ("8", 1f, Keys.D8),
+                ("9", 1f, Keys.D9),
+                ("0", 1f, Keys.D0),
+                ("-", 1f, Keys.OemMinus),
+                ("=", 1f, Keys.Oemplus),
+                ("Back", 2f, Keys.Back)
+            );
+            y += KeyUnit;
+
+            AddKeyRow(
+                y,
+                rowHeight,
+                ("Tab", 1.5f, Keys.Tab),
+                ("Q", 1f, Keys.Q),
+                ("W", 1f, Keys.W),
+                ("E", 1f, Keys.E),
+                ("R", 1f, Keys.R),
+                ("T", 1f, Keys.T),
+                ("Y", 1f, Keys.Y),
+                ("U", 1f, Keys.U),
+                ("I", 1f, Keys.I),
+                ("O", 1f, Keys.O),
+                ("P", 1f, Keys.P),
+                ("[", 1f, Keys.OemOpenBrackets),
+                ("]", 1f, Keys.OemCloseBrackets),
+                ("\\", 1.5f, Keys.OemPipe)
+            );
+            y += KeyUnit;
+
+            AddKeyRow(
+                y,
+                rowHeight,
+                ("Caps", 1.75f, Keys.CapsLock),
+                ("A", 1f, Keys.A),
+                ("S", 1f, Keys.S),
+                ("D", 1f, Keys.D),
+                ("F", 1f, Keys.F),
+                ("G", 1f, Keys.G),
+                ("H", 1f, Keys.H),
+                ("J", 1f, Keys.J),
+                ("K", 1f, Keys.K),
+                ("L", 1f, Keys.L),
+                (";", 1f, Keys.OemSemicolon),
+                ("'", 1f, Keys.OemQuotes),
+                ("Enter", 2.25f, Keys.Enter)
+            );
+            y += KeyUnit;
+
+            int shiftRowY = y;
+            AddKeyRow(
+                y,
+                rowHeight,
+                ("Shift", 2.25f, Keys.ShiftKey),
+                ("Z", 1f, Keys.Z),
+                ("X", 1f, Keys.X),
+                ("C", 1f, Keys.C),
+                ("V", 1f, Keys.V),
+                ("B", 1f, Keys.B),
+                ("N", 1f, Keys.N),
+                ("M", 1f, Keys.M),
+                (",", 1f, Keys.Oemcomma),
+                (".", 1f, Keys.OemPeriod),
+                ("/", 1f, Keys.OemQuestion),
+                ("Shift", 2.75f, Keys.ShiftKey)
+            );
+            y += KeyUnit;
+
+            int bottomRowY = y;
+            AddKeyRow(
+                y,
+                rowHeight,
+                ("Ctrl", 1.25f, Keys.ControlKey),
+                ("Win", 1.25f, Keys.LWin),
+                ("Alt", 1.25f, Keys.Menu),
+                ("Space", 6.25f, Keys.Space),
+                ("Alt", 1.25f, Keys.Menu),
+                ("Win", 1.25f, Keys.RWin),
+                ("Menu", 1.25f, Keys.Apps),
+                ("Ctrl", 1.25f, Keys.ControlKey)
+            );
+            y += KeyUnit;
+
+            // Arrow cluster to the right of the main block, aligned with the
+            // bottom two rows (the standard inverted-T arrangement).
+            const float mainBlockWidth = 15f;
+            const float arrowGap = 0.5f;
+            int arrowX = (int)Math.Round((mainBlockWidth + arrowGap) * KeyUnit);
+            AddKeyRow(
+                arrowX,
+                shiftRowY,
+                rowHeight,
+                ("", 1f, Keys.None),
+                ("↑", 1f, Keys.Up),
+                ("", 1f, Keys.None)
+            );
+            AddKeyRow(
+                arrowX,
+                bottomRowY,
+                rowHeight,
+                ("←", 1f, Keys.Left),
+                ("↓", 1f, Keys.Down),
+                ("→", 1f, Keys.Right)
+            );
+
+            // Mouse cluster (buttons + scroll wheel), just above the arrow
+            // cluster on the right side — same column span as the arrows
+            // below, so the two clusters read as one grouped block.
+            BuildMouseCluster(arrowX, shiftRowY);
+
+            keyboardGrid.Size = new Size(arrowX + 3 * KeyUnit, y);
+
+            keyboardPanel = new Panel
+            {
+                Dock = DockStyle.Bottom,
+                Height = keyboardGrid.Height + 14,
+                BackColor = Color.Transparent,
+            };
+            keyboardPanel.Controls.Add(keyboardGrid);
+            Controls.Add(keyboardPanel);
+        }
+
+        // Lays out one row of keys starting at the left edge (x = 0).
+        private void AddKeyRow(
+            int y,
+            int rowHeight,
+            params (string Text, float Width, Keys Key)[] keys
+        ) => AddKeyRow(0, y, rowHeight, keys);
+
+        // Lays out one row of keys starting at an arbitrary x (used for the arrow
+        // cluster, which starts to the right of the main block).
+        private void AddKeyRow(
+            int startX,
+            int y,
+            int rowHeight,
+            params (string Text, float Width, Keys Key)[] keys
+        )
+        {
+            int x = startX;
+            foreach ((string text, float width, Keys key) in keys)
+            {
+                int pixelWidth = (int)Math.Round(width * KeyUnit);
+                if (key != Keys.None)
+                {
+                    var label = new Label
+                    {
+                        Text = text,
+                        TextAlign = ContentAlignment.MiddleCenter,
+                        BorderStyle = BorderStyle.FixedSingle,
+                        BackColor = KeyboardKeyBackColor,
+                        ForeColor = KeyboardKeyForeColor,
+                        Font = new Font("Segoe UI", 7.5F),
+                        Location = new Point(x, y),
+                        Size = new Size(pixelWidth - KeyGap, rowHeight),
+                    };
+                    keyboardGrid.Controls.Add(label);
+
+                    if (!keyboardKeyLabels.TryGetValue(key, out List<Label>? labels))
+                    {
+                        labels = new List<Label>();
+                        keyboardKeyLabels[key] = labels;
+                    }
+                    labels.Add(label);
+                }
+                x += pixelWidth;
+            }
+        }
+
+        // Highlights (or un-highlights) every visual keycap mapped to a given
+        // Keys value — more than one keycap can share a value (e.g. both Shift
+        // keys), since WinForms itself can't tell left and right apart for
+        // Shift/Ctrl/Alt (KeyEventArgs.KeyCode reports the generic ShiftKey /
+        // ControlKey / Menu regardless of which physical key was pressed).
+        private void HighlightVirtualKey(Keys key, bool pressed)
+        {
+            if (!keyboardKeyLabels.TryGetValue(key, out List<Label>? labels))
+            {
+                return;
+            }
+
+            foreach (Label label in labels)
+            {
+                label.BackColor = pressed ? Color.Red : KeyboardKeyBackColor;
+                label.ForeColor = pressed ? Color.White : KeyboardKeyForeColor;
+            }
+        }
+
+        // Builds a mouse-shaped cluster — left/middle/right buttons flanking a
+        // center scroll-wheel strip (scroll-up indicator over the middle
+        // button over scroll-down) — inside a bordered "body" panel so the
+        // group reads as one device rather than three loose keys. Sized to
+        // the same 3-unit column width as the arrow cluster and sat directly
+        // on top of it (bottomY is the arrow cluster's own top edge).
+        private void BuildMouseCluster(int x, int bottomY)
+        {
+            const int rows = 3;
+            int height = rows * KeyUnit;
+            int top = bottomY - height;
+            int cellSize = KeyUnit - KeyGap;
+
+            var body = new Panel
+            {
+                Location = new Point(x, top),
+                Size = new Size(3 * KeyUnit - KeyGap, height - KeyGap),
+                BackColor = Color.Gainsboro,
+                BorderStyle = BorderStyle.FixedSingle,
+            };
+            keyboardGrid.Controls.Add(body);
+
+            Label leftButton = CreateMouseCellLabel(
+                "L",
+                new Point(0, 0),
+                new Size(cellSize, height - KeyGap)
+            );
+            body.Controls.Add(leftButton);
+            RegisterMouseButtonLabel(MouseButtons.Left, leftButton);
+
+            Label rightButton = CreateMouseCellLabel(
+                "R",
+                new Point(2 * KeyUnit, 0),
+                new Size(cellSize, height - KeyGap)
+            );
+            body.Controls.Add(rightButton);
+            RegisterMouseButtonLabel(MouseButtons.Right, rightButton);
+
+            mouseScrollUpLabel = CreateMouseCellLabel(
+                "▲",
+                new Point(KeyUnit, 0),
+                new Size(cellSize, cellSize)
+            );
+            body.Controls.Add(mouseScrollUpLabel);
+
+            Label middleButton = CreateMouseCellLabel(
+                "M",
+                new Point(KeyUnit, KeyUnit),
+                new Size(cellSize, cellSize)
+            );
+            body.Controls.Add(middleButton);
+            RegisterMouseButtonLabel(MouseButtons.Middle, middleButton);
+
+            mouseScrollDownLabel = CreateMouseCellLabel(
+                "▼",
+                new Point(KeyUnit, 2 * KeyUnit),
+                new Size(cellSize, cellSize)
+            );
+            body.Controls.Add(mouseScrollDownLabel);
+        }
+
+        private static Label CreateMouseCellLabel(string text, Point location, Size size) =>
+            new()
+            {
+                Text = text,
+                TextAlign = ContentAlignment.MiddleCenter,
+                BorderStyle = BorderStyle.FixedSingle,
+                BackColor = KeyboardKeyBackColor,
+                ForeColor = KeyboardKeyForeColor,
+                Font = new Font("Segoe UI", 7.5F),
+                Location = location,
+                Size = size,
+            };
+
+        private void RegisterMouseButtonLabel(MouseButtons button, Label label)
+        {
+            if (!keyboardMouseButtonLabels.TryGetValue(button, out List<Label>? labels))
+            {
+                labels = new List<Label>();
+                keyboardMouseButtonLabels[button] = labels;
+            }
+            labels.Add(label);
+        }
+
+        // Highlights (or un-highlights) every visual button-cap mapped to a
+        // given MouseButtons value.
+        private void HighlightVirtualMouseButton(MouseButtons button, bool pressed)
+        {
+            if (!keyboardMouseButtonLabels.TryGetValue(button, out List<Label>? labels))
+            {
+                return;
+            }
+
+            foreach (Label label in labels)
+            {
+                label.BackColor = pressed ? Color.Red : KeyboardKeyBackColor;
+                label.ForeColor = pressed ? Color.White : KeyboardKeyForeColor;
+            }
+        }
+
+        // Wheel ticks are discrete (no down/up pair), so the scroll-direction
+        // indicator briefly flashes red instead of tracking a held state —
+        // scrollFlashTimer clears it shortly after the last tick.
+        private void FlashVirtualScroll(bool up)
+        {
+            SetScrollIndicatorActive(up ? mouseScrollUpLabel : mouseScrollDownLabel, true);
+            SetScrollIndicatorActive(up ? mouseScrollDownLabel : mouseScrollUpLabel, false);
+            scrollFlashTimer.Stop();
+            scrollFlashTimer.Start();
+        }
+
+        private static void SetScrollIndicatorActive(Label label, bool active)
+        {
+            label.BackColor = active ? Color.Red : KeyboardKeyBackColor;
+            label.ForeColor = active ? Color.White : KeyboardKeyForeColor;
+        }
+
+        // Keeps the keyboard centered horizontally (and vertically within its own
+        // panel) as the window is resized — the grid's own size is fixed, but
+        // keyboardPanel stretches to the full window width via Dock.Bottom.
+        private void CenterKeyboardGrid()
+        {
+            keyboardGrid.Left = Math.Max(
+                0,
+                (keyboardPanel.ClientSize.Width - keyboardGrid.Width) / 2
+            );
+            keyboardGrid.Top = Math.Max(
+                0,
+                (keyboardPanel.ClientSize.Height - keyboardGrid.Height) / 2
+            );
         }
 
         // Reports the OS cursor's position relative to whichever monitor the app
@@ -1408,6 +1935,104 @@ namespace KeyPress
             BuildCursorMonitorBoxes();
         }
 
+        // Which kind of device a position box represents — drives the small
+        // corner glyph in DrawBoxIcon so the boxes are distinguishable at a
+        // glance without reading their title text.
+        private enum BoxIconKind
+        {
+            Monitor,
+            Trackpad,
+            TouchScreen,
+        }
+
+        // Drops a small device-type glyph in a box's bottom-left corner.
+        // Surfaces here are all fixed-size (never resized after creation), so
+        // a one-time Location computed from the current ClientSize is enough
+        // — no Anchor needed.
+        private static void AddBoxIcon(Panel surface, BoxIconKind kind)
+        {
+            const int iconWidth = 18;
+            const int iconHeight = 14;
+            const int margin = 6;
+
+            var icon = new Panel
+            {
+                Size = new Size(iconWidth, iconHeight),
+                Location = new Point(margin, surface.ClientSize.Height - iconHeight - margin),
+                BackColor = Color.Transparent,
+            };
+            icon.Paint += (s, e) => DrawBoxIcon(e.Graphics, kind, icon.ClientRectangle);
+            surface.Controls.Add(icon);
+        }
+
+        // Draws a tiny monochrome glyph for each device kind: a monitor is a
+        // screen on a stand, a trackpad is a flat pad with a click-button
+        // divider near the bottom, and a touch screen is a screen with a
+        // fingertip touch ring in the middle.
+        private static void DrawBoxIcon(Graphics g, BoxIconKind kind, Rectangle bounds)
+        {
+            g.SmoothingMode = System.Drawing.Drawing2D.SmoothingMode.AntiAlias;
+            using var pen = new Pen(SystemColors.GrayText, 1.25f);
+
+            switch (kind)
+            {
+                case BoxIconKind.Monitor:
+                {
+                    var screenRect = new Rectangle(
+                        bounds.Left,
+                        bounds.Top,
+                        bounds.Width - 1,
+                        bounds.Height - 5
+                    );
+                    g.DrawRectangle(pen, screenRect);
+                    int midX = bounds.Left + bounds.Width / 2;
+                    g.DrawLine(pen, midX, screenRect.Bottom, midX, bounds.Bottom - 1);
+                    g.DrawLine(pen, midX - 4, bounds.Bottom - 1, midX + 4, bounds.Bottom - 1);
+                    break;
+                }
+
+                case BoxIconKind.Trackpad:
+                {
+                    var padRect = new Rectangle(
+                        bounds.Left,
+                        bounds.Top,
+                        bounds.Width - 1,
+                        bounds.Height - 1
+                    );
+                    g.DrawRectangle(pen, padRect);
+                    int dividerY = bounds.Bottom - 4;
+                    g.DrawLine(pen, bounds.Left + 2, dividerY, bounds.Right - 3, dividerY);
+                    break;
+                }
+
+                case BoxIconKind.TouchScreen:
+                {
+                    var screenRect = new Rectangle(
+                        bounds.Left,
+                        bounds.Top,
+                        bounds.Width - 1,
+                        bounds.Height - 1
+                    );
+                    g.DrawRectangle(pen, screenRect);
+                    Point center = new(
+                        bounds.Left + bounds.Width / 2,
+                        bounds.Top + bounds.Height / 2
+                    );
+                    const int ringRadius = 3;
+                    g.DrawEllipse(
+                        pen,
+                        center.X - ringRadius,
+                        center.Y - ringRadius,
+                        ringRadius * 2,
+                        ringRadius * 2
+                    );
+                    using var dotBrush = new SolidBrush(SystemColors.GrayText);
+                    g.FillEllipse(dotBrush, center.X - 1, center.Y - 1, 2, 2);
+                    break;
+                }
+            }
+        }
+
         // Builds one "Cursor" box per connected display (Screen.AllScreens),
         // ordered left-to-right by physical position, and inserts them ahead of
         // the other boxes so Cursor stays first in the row.
@@ -1458,6 +2083,7 @@ namespace KeyPress
                 surface.Controls.Add(dot);
                 surface.Controls.Add(coordLabel);
                 surface.Controls.Add(titleLabel);
+                AddBoxIcon(surface, BoxIconKind.Monitor);
 
                 boxesPanel.Controls.Add(surface);
                 boxesPanel.Controls.SetChildIndex(surface, i);
@@ -1530,8 +2156,9 @@ namespace KeyPress
         private void RemoveTouchPoint(uint id)
         {
             touchScreenPoints.Remove(id);
-            if (touchDots.Remove(id, out Panel? dot))
+            if (touchDots.TryGetValue(id, out Panel? dot))
             {
+                touchDots.Remove(id);
                 touchSurface.Controls.Remove(dot);
                 dot.Dispose();
             }

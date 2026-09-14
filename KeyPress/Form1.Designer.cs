@@ -28,300 +28,313 @@ namespace KeyPress
         /// </summary>
         private void InitializeComponent()
         {
-            System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(Form1));
-            displayLabel = new Label();
-            releaseLabel = new Label();
-            trackpadSurface = new Panel();
-            trackpadDot = new Panel();
-            trackpadCoordLabel = new Label();
-            trackpadTitleLabel = new Label();
-            touchSurface = new Panel();
-            touchCoordLabel = new Label();
-            touchTitleLabel = new Label();
-            trackpadRawSurface = new Panel();
-            trackpadRawCoordLabel = new Label();
-            trackpadRawTitleLabel = new Label();
-            mainMenuStrip = new MenuStrip();
-            fileMenuItem = new ToolStripMenuItem();
-            refreshMenuItem = new ToolStripMenuItem();
-            viewMenuItem = new ToolStripMenuItem();
-            viewCursorMenuItem = new ToolStripMenuItem();
-            viewTouchScreenMenuItem = new ToolStripMenuItem();
-            viewTrackpadMenuItem = new ToolStripMenuItem();
-            viewTrackpadRawMenuItem = new ToolStripMenuItem();
-            viewMenuSeparator = new ToolStripSeparator();
-            viewKeyPressTextMenuItem = new ToolStripMenuItem();
-            viewKeyReleaseTextMenuItem = new ToolStripMenuItem();
-            viewResetSeparator = new ToolStripSeparator();
-            viewResetMenuItem = new ToolStripMenuItem();
-            boxesPanel = new FlowLayoutPanel();
-            trackpadSurface.SuspendLayout();
-            touchSurface.SuspendLayout();
-            trackpadRawSurface.SuspendLayout();
-            mainMenuStrip.SuspendLayout();
-            boxesPanel.SuspendLayout();
-            SuspendLayout();
+            this.displayLabel = new System.Windows.Forms.Label();
+            this.releaseLabel = new System.Windows.Forms.Label();
+            this.trackpadSurface = new System.Windows.Forms.Panel();
+            this.trackpadDot = new System.Windows.Forms.Panel();
+            this.trackpadCoordLabel = new System.Windows.Forms.Label();
+            this.trackpadTitleLabel = new System.Windows.Forms.Label();
+            this.touchSurface = new System.Windows.Forms.Panel();
+            this.touchCoordLabel = new System.Windows.Forms.Label();
+            this.touchTitleLabel = new System.Windows.Forms.Label();
+            this.trackpadRawSurface = new System.Windows.Forms.Panel();
+            this.trackpadRawCoordLabel = new System.Windows.Forms.Label();
+            this.trackpadRawTitleLabel = new System.Windows.Forms.Label();
+            this.mainMenuStrip = new System.Windows.Forms.MenuStrip();
+            this.fileMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.refreshMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.viewMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.viewCursorMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.viewTouchScreenMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.viewTrackpadMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.viewTrackpadRawMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.viewMenuSeparator = new System.Windows.Forms.ToolStripSeparator();
+            this.viewKeyPressTextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.viewKeyReleaseTextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.viewResetSeparator = new System.Windows.Forms.ToolStripSeparator();
+            this.viewResetMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.boxesPanel = new System.Windows.Forms.FlowLayoutPanel();
+            this.trackpadSurface.SuspendLayout();
+            this.touchSurface.SuspendLayout();
+            this.trackpadRawSurface.SuspendLayout();
+            this.mainMenuStrip.SuspendLayout();
+            this.boxesPanel.SuspendLayout();
+            this.SuspendLayout();
             // 
             // displayLabel
             // 
-            displayLabel.Dock = DockStyle.Fill;
-            displayLabel.Font = new Font("Segoe UI", 24F, FontStyle.Bold);
-            displayLabel.Location = new Point(0, 24);
-            displayLabel.Name = "displayLabel";
-            displayLabel.Size = new Size(884, 437);
-            displayLabel.TabIndex = 0;
-            displayLabel.TextAlign = ContentAlignment.MiddleCenter;
+            this.displayLabel.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.displayLabel.Font = new System.Drawing.Font("Segoe UI", 24F, System.Drawing.FontStyle.Bold);
+            this.displayLabel.Location = new System.Drawing.Point(0, 24);
+            this.displayLabel.Name = "displayLabel";
+            this.displayLabel.Padding = new System.Windows.Forms.Padding(0, 0, 0, 9);
+            this.displayLabel.Size = new System.Drawing.Size(932, 357);
+            this.displayLabel.TabIndex = 0;
+            this.displayLabel.TextAlign = System.Drawing.ContentAlignment.BottomCenter;
             // 
             // releaseLabel
             // 
-            releaseLabel.Dock = DockStyle.Bottom;
-            releaseLabel.Font = new Font("Segoe UI", 20F, FontStyle.Bold);
-            releaseLabel.ForeColor = SystemColors.ControlText;
-            releaseLabel.Location = new Point(0, 461);
-            releaseLabel.Name = "releaseLabel";
-            releaseLabel.Size = new Size(884, 100);
-            releaseLabel.TabIndex = 1;
-            releaseLabel.TextAlign = ContentAlignment.MiddleCenter;
+            this.releaseLabel.Dock = System.Windows.Forms.DockStyle.Bottom;
+            this.releaseLabel.Font = new System.Drawing.Font("Segoe UI", 20F, System.Drawing.FontStyle.Bold);
+            this.releaseLabel.ForeColor = System.Drawing.SystemColors.ControlText;
+            this.releaseLabel.Location = new System.Drawing.Point(0, 381);
+            this.releaseLabel.Name = "releaseLabel";
+            this.releaseLabel.Size = new System.Drawing.Size(932, 52);
+            this.releaseLabel.TabIndex = 1;
+            this.releaseLabel.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
             // 
             // trackpadSurface
             // 
-            trackpadSurface.BackColor = SystemColors.Window;
-            trackpadSurface.BorderStyle = BorderStyle.FixedSingle;
-            trackpadSurface.Controls.Add(trackpadDot);
-            trackpadSurface.Controls.Add(trackpadCoordLabel);
-            trackpadSurface.Controls.Add(trackpadTitleLabel);
-            trackpadSurface.Location = new Point(270, 0);
-            trackpadSurface.Margin = new Padding(10, 0, 10, 0);
-            trackpadSurface.Name = "trackpadSurface";
-            trackpadSurface.Size = new Size(240, 120);
-            trackpadSurface.TabIndex = 3;
+            this.trackpadSurface.BackColor = System.Drawing.SystemColors.Window;
+            this.trackpadSurface.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
+            this.trackpadSurface.Controls.Add(this.trackpadDot);
+            this.trackpadSurface.Controls.Add(this.trackpadCoordLabel);
+            this.trackpadSurface.Controls.Add(this.trackpadTitleLabel);
+            this.trackpadSurface.Location = new System.Drawing.Point(233, 0);
+            this.trackpadSurface.Margin = new System.Windows.Forms.Padding(9, 0, 9, 0);
+            this.trackpadSurface.Name = "trackpadSurface";
+            this.trackpadSurface.Size = new System.Drawing.Size(206, 104);
+            this.trackpadSurface.TabIndex = 3;
             // 
             // trackpadDot
             // 
-            trackpadDot.BackColor = Color.SeaGreen;
-            trackpadDot.Location = new Point(116, 81);
-            trackpadDot.Name = "trackpadDot";
-            trackpadDot.Size = new Size(8, 8);
-            trackpadDot.TabIndex = 0;
-            trackpadDot.Visible = false;
+            this.trackpadDot.BackColor = System.Drawing.Color.SeaGreen;
+            this.trackpadDot.Location = new System.Drawing.Point(99, 70);
+            this.trackpadDot.Name = "trackpadDot";
+            this.trackpadDot.Size = new System.Drawing.Size(7, 7);
+            this.trackpadDot.TabIndex = 0;
+            this.trackpadDot.Visible = false;
             // 
             // trackpadCoordLabel
             // 
-            trackpadCoordLabel.Dock = DockStyle.Top;
-            trackpadCoordLabel.Font = new Font("Segoe UI", 12F, FontStyle.Bold);
-            trackpadCoordLabel.Location = new Point(0, 22);
-            trackpadCoordLabel.Name = "trackpadCoordLabel";
-            trackpadCoordLabel.Size = new Size(238, 28);
-            trackpadCoordLabel.TabIndex = 1;
-            trackpadCoordLabel.Text = "X: 0, Y: 0";
-            trackpadCoordLabel.TextAlign = ContentAlignment.MiddleCenter;
+            this.trackpadCoordLabel.Dock = System.Windows.Forms.DockStyle.Top;
+            this.trackpadCoordLabel.Font = new System.Drawing.Font("Segoe UI", 12F, System.Drawing.FontStyle.Bold);
+            this.trackpadCoordLabel.Location = new System.Drawing.Point(0, 19);
+            this.trackpadCoordLabel.Name = "trackpadCoordLabel";
+            this.trackpadCoordLabel.Size = new System.Drawing.Size(204, 24);
+            this.trackpadCoordLabel.TabIndex = 1;
+            this.trackpadCoordLabel.Text = "X: 0, Y: 0";
+            this.trackpadCoordLabel.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
             // 
             // trackpadTitleLabel
             // 
-            trackpadTitleLabel.Dock = DockStyle.Top;
-            trackpadTitleLabel.Font = new Font("Segoe UI", 9F);
-            trackpadTitleLabel.ForeColor = SystemColors.GrayText;
-            trackpadTitleLabel.Location = new Point(0, 0);
-            trackpadTitleLabel.Name = "trackpadTitleLabel";
-            trackpadTitleLabel.Size = new Size(238, 22);
-            trackpadTitleLabel.TabIndex = 2;
-            trackpadTitleLabel.Text = "Trackpad";
-            trackpadTitleLabel.TextAlign = ContentAlignment.MiddleCenter;
+            this.trackpadTitleLabel.Dock = System.Windows.Forms.DockStyle.Top;
+            this.trackpadTitleLabel.Font = new System.Drawing.Font("Segoe UI", 9F);
+            this.trackpadTitleLabel.ForeColor = System.Drawing.SystemColors.GrayText;
+            this.trackpadTitleLabel.Location = new System.Drawing.Point(0, 0);
+            this.trackpadTitleLabel.Name = "trackpadTitleLabel";
+            this.trackpadTitleLabel.Size = new System.Drawing.Size(204, 19);
+            this.trackpadTitleLabel.TabIndex = 2;
+            this.trackpadTitleLabel.Text = "Trackpad";
+            this.trackpadTitleLabel.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
             // 
             // touchSurface
             // 
-            touchSurface.BackColor = SystemColors.Window;
-            touchSurface.BorderStyle = BorderStyle.FixedSingle;
-            touchSurface.Controls.Add(touchCoordLabel);
-            touchSurface.Controls.Add(touchTitleLabel);
-            touchSurface.Location = new Point(10, 0);
-            touchSurface.Margin = new Padding(10, 0, 10, 0);
-            touchSurface.Name = "touchSurface";
-            touchSurface.Size = new Size(240, 120);
-            touchSurface.TabIndex = 4;
+            this.touchSurface.BackColor = System.Drawing.SystemColors.Window;
+            this.touchSurface.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
+            this.touchSurface.Controls.Add(this.touchCoordLabel);
+            this.touchSurface.Controls.Add(this.touchTitleLabel);
+            this.touchSurface.Location = new System.Drawing.Point(9, 0);
+            this.touchSurface.Margin = new System.Windows.Forms.Padding(9, 0, 9, 0);
+            this.touchSurface.Name = "touchSurface";
+            this.touchSurface.Size = new System.Drawing.Size(206, 104);
+            this.touchSurface.TabIndex = 4;
             // 
             // touchCoordLabel
             // 
-            touchCoordLabel.Dock = DockStyle.Top;
-            touchCoordLabel.Font = new Font("Segoe UI", 12F, FontStyle.Bold);
-            touchCoordLabel.Location = new Point(0, 22);
-            touchCoordLabel.Name = "touchCoordLabel";
-            touchCoordLabel.Size = new Size(238, 28);
-            touchCoordLabel.TabIndex = 0;
-            touchCoordLabel.Text = "No touch";
-            touchCoordLabel.TextAlign = ContentAlignment.MiddleCenter;
+            this.touchCoordLabel.Dock = System.Windows.Forms.DockStyle.Top;
+            this.touchCoordLabel.Font = new System.Drawing.Font("Segoe UI", 12F, System.Drawing.FontStyle.Bold);
+            this.touchCoordLabel.Location = new System.Drawing.Point(0, 19);
+            this.touchCoordLabel.Name = "touchCoordLabel";
+            this.touchCoordLabel.Size = new System.Drawing.Size(204, 24);
+            this.touchCoordLabel.TabIndex = 0;
+            this.touchCoordLabel.Text = "No touch";
+            this.touchCoordLabel.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
             // 
             // touchTitleLabel
             // 
-            touchTitleLabel.Dock = DockStyle.Top;
-            touchTitleLabel.Font = new Font("Segoe UI", 9F);
-            touchTitleLabel.ForeColor = SystemColors.GrayText;
-            touchTitleLabel.Location = new Point(0, 0);
-            touchTitleLabel.Name = "touchTitleLabel";
-            touchTitleLabel.Size = new Size(238, 22);
-            touchTitleLabel.TabIndex = 1;
-            touchTitleLabel.Text = "Touch Screen";
-            touchTitleLabel.TextAlign = ContentAlignment.MiddleCenter;
+            this.touchTitleLabel.Dock = System.Windows.Forms.DockStyle.Top;
+            this.touchTitleLabel.Font = new System.Drawing.Font("Segoe UI", 9F);
+            this.touchTitleLabel.ForeColor = System.Drawing.SystemColors.GrayText;
+            this.touchTitleLabel.Location = new System.Drawing.Point(0, 0);
+            this.touchTitleLabel.Name = "touchTitleLabel";
+            this.touchTitleLabel.Size = new System.Drawing.Size(204, 19);
+            this.touchTitleLabel.TabIndex = 1;
+            this.touchTitleLabel.Text = "Touch Screen";
+            this.touchTitleLabel.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
             // 
             // trackpadRawSurface
             // 
-            trackpadRawSurface.BackColor = SystemColors.Window;
-            trackpadRawSurface.BorderStyle = BorderStyle.FixedSingle;
-            trackpadRawSurface.Controls.Add(trackpadRawCoordLabel);
-            trackpadRawSurface.Controls.Add(trackpadRawTitleLabel);
-            trackpadRawSurface.Location = new Point(530, 0);
-            trackpadRawSurface.Margin = new Padding(10, 0, 10, 0);
-            trackpadRawSurface.Name = "trackpadRawSurface";
-            trackpadRawSurface.Size = new Size(320, 160);
-            trackpadRawSurface.TabIndex = 5;
-            //
+            this.trackpadRawSurface.BackColor = System.Drawing.SystemColors.Window;
+            this.trackpadRawSurface.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
+            this.trackpadRawSurface.Controls.Add(this.trackpadRawCoordLabel);
+            this.trackpadRawSurface.Controls.Add(this.trackpadRawTitleLabel);
+            this.trackpadRawSurface.Location = new System.Drawing.Point(457, 0);
+            this.trackpadRawSurface.Margin = new System.Windows.Forms.Padding(9, 0, 9, 0);
+            this.trackpadRawSurface.Name = "trackpadRawSurface";
+            this.trackpadRawSurface.Size = new System.Drawing.Size(275, 139);
+            this.trackpadRawSurface.TabIndex = 5;
+            // 
             // trackpadRawCoordLabel
             // 
-            trackpadRawCoordLabel.Dock = DockStyle.Top;
-            trackpadRawCoordLabel.Font = new Font("Segoe UI", 12F, FontStyle.Bold);
-            trackpadRawCoordLabel.Location = new Point(0, 22);
-            trackpadRawCoordLabel.Name = "trackpadRawCoordLabel";
-            trackpadRawCoordLabel.Size = new Size(318, 28);
-            trackpadRawCoordLabel.TabIndex = 1;
-            trackpadRawCoordLabel.Text = "X: 0, Y: 0";
-            trackpadRawCoordLabel.TextAlign = ContentAlignment.MiddleCenter;
+            this.trackpadRawCoordLabel.Dock = System.Windows.Forms.DockStyle.Top;
+            this.trackpadRawCoordLabel.Font = new System.Drawing.Font("Segoe UI", 12F, System.Drawing.FontStyle.Bold);
+            this.trackpadRawCoordLabel.Location = new System.Drawing.Point(0, 19);
+            this.trackpadRawCoordLabel.Name = "trackpadRawCoordLabel";
+            this.trackpadRawCoordLabel.Size = new System.Drawing.Size(273, 24);
+            this.trackpadRawCoordLabel.TabIndex = 1;
+            this.trackpadRawCoordLabel.Text = "X: 0, Y: 0";
+            this.trackpadRawCoordLabel.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
             // 
             // trackpadRawTitleLabel
             // 
-            trackpadRawTitleLabel.Dock = DockStyle.Top;
-            trackpadRawTitleLabel.Font = new Font("Segoe UI", 9F);
-            trackpadRawTitleLabel.ForeColor = SystemColors.GrayText;
-            trackpadRawTitleLabel.Location = new Point(0, 0);
-            trackpadRawTitleLabel.Name = "trackpadRawTitleLabel";
-            trackpadRawTitleLabel.Size = new Size(318, 22);
-            trackpadRawTitleLabel.TabIndex = 2;
-            trackpadRawTitleLabel.Text = "Trackpad Surface (raw)";
-            trackpadRawTitleLabel.TextAlign = ContentAlignment.MiddleCenter;
+            this.trackpadRawTitleLabel.Dock = System.Windows.Forms.DockStyle.Top;
+            this.trackpadRawTitleLabel.Font = new System.Drawing.Font("Segoe UI", 9F);
+            this.trackpadRawTitleLabel.ForeColor = System.Drawing.SystemColors.GrayText;
+            this.trackpadRawTitleLabel.Location = new System.Drawing.Point(0, 0);
+            this.trackpadRawTitleLabel.Name = "trackpadRawTitleLabel";
+            this.trackpadRawTitleLabel.Size = new System.Drawing.Size(273, 19);
+            this.trackpadRawTitleLabel.TabIndex = 2;
+            this.trackpadRawTitleLabel.Text = "Trackpad Surface (raw)";
+            this.trackpadRawTitleLabel.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
             // 
             // mainMenuStrip
             // 
-            mainMenuStrip.Items.AddRange(new ToolStripItem[] { fileMenuItem, viewMenuItem });
-            mainMenuStrip.Location = new Point(0, 0);
-            mainMenuStrip.Name = "mainMenuStrip";
-            mainMenuStrip.ShowItemToolTips = true;
-            mainMenuStrip.Size = new Size(884, 24);
-            mainMenuStrip.TabIndex = 6;
+            this.mainMenuStrip.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.fileMenuItem,
+            this.viewMenuItem});
+            this.mainMenuStrip.Location = new System.Drawing.Point(0, 0);
+            this.mainMenuStrip.Name = "mainMenuStrip";
+            this.mainMenuStrip.Padding = new System.Windows.Forms.Padding(5, 2, 0, 2);
+            this.mainMenuStrip.ShowItemToolTips = true;
+            this.mainMenuStrip.Size = new System.Drawing.Size(932, 24);
+            this.mainMenuStrip.TabIndex = 6;
             // 
             // fileMenuItem
             // 
-            fileMenuItem.DropDownItems.AddRange(new ToolStripItem[] { refreshMenuItem });
-            fileMenuItem.Name = "fileMenuItem";
-            fileMenuItem.Size = new Size(37, 20);
-            fileMenuItem.Text = "&File";
+            this.fileMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.refreshMenuItem});
+            this.fileMenuItem.Name = "fileMenuItem";
+            this.fileMenuItem.Size = new System.Drawing.Size(37, 20);
+            this.fileMenuItem.Text = "&File";
             // 
             // refreshMenuItem
             // 
-            refreshMenuItem.Name = "refreshMenuItem";
-            refreshMenuItem.Size = new Size(113, 22);
-            refreshMenuItem.Text = "Refresh";
-            refreshMenuItem.ToolTipText = "Refresh hardware / monitor connections";
+            this.refreshMenuItem.Name = "refreshMenuItem";
+            this.refreshMenuItem.Size = new System.Drawing.Size(113, 22);
+            this.refreshMenuItem.Text = "Refresh";
+            this.refreshMenuItem.ToolTipText = "Refresh hardware / monitor connections";
             // 
             // viewMenuItem
             // 
-            viewMenuItem.DropDownItems.AddRange(new ToolStripItem[] { viewCursorMenuItem, viewTouchScreenMenuItem, viewTrackpadMenuItem, viewTrackpadRawMenuItem, viewMenuSeparator, viewKeyPressTextMenuItem, viewKeyReleaseTextMenuItem, viewResetSeparator, viewResetMenuItem });
-            viewMenuItem.Name = "viewMenuItem";
-            viewMenuItem.Size = new Size(44, 20);
-            viewMenuItem.Text = "&View";
+            this.viewMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.viewCursorMenuItem,
+            this.viewTouchScreenMenuItem,
+            this.viewTrackpadMenuItem,
+            this.viewTrackpadRawMenuItem,
+            this.viewMenuSeparator,
+            this.viewKeyPressTextMenuItem,
+            this.viewKeyReleaseTextMenuItem,
+            this.viewResetSeparator,
+            this.viewResetMenuItem});
+            this.viewMenuItem.Name = "viewMenuItem";
+            this.viewMenuItem.Size = new System.Drawing.Size(44, 20);
+            this.viewMenuItem.Text = "&View";
             // 
             // viewCursorMenuItem
             // 
-            viewCursorMenuItem.CheckOnClick = true;
-            viewCursorMenuItem.Name = "viewCursorMenuItem";
-            viewCursorMenuItem.Size = new Size(194, 22);
-            viewCursorMenuItem.Text = "Cursor";
+            this.viewCursorMenuItem.CheckOnClick = true;
+            this.viewCursorMenuItem.Name = "viewCursorMenuItem";
+            this.viewCursorMenuItem.Size = new System.Drawing.Size(194, 22);
+            this.viewCursorMenuItem.Text = "Cursor";
             // 
             // viewTouchScreenMenuItem
             // 
-            viewTouchScreenMenuItem.CheckOnClick = true;
-            viewTouchScreenMenuItem.Name = "viewTouchScreenMenuItem";
-            viewTouchScreenMenuItem.Size = new Size(194, 22);
-            viewTouchScreenMenuItem.Text = "Touch Screen";
+            this.viewTouchScreenMenuItem.CheckOnClick = true;
+            this.viewTouchScreenMenuItem.Name = "viewTouchScreenMenuItem";
+            this.viewTouchScreenMenuItem.Size = new System.Drawing.Size(194, 22);
+            this.viewTouchScreenMenuItem.Text = "Touch Screen";
             // 
             // viewTrackpadMenuItem
             // 
-            viewTrackpadMenuItem.CheckOnClick = true;
-            viewTrackpadMenuItem.Name = "viewTrackpadMenuItem";
-            viewTrackpadMenuItem.Size = new Size(194, 22);
-            viewTrackpadMenuItem.Text = "Trackpad";
+            this.viewTrackpadMenuItem.CheckOnClick = true;
+            this.viewTrackpadMenuItem.Name = "viewTrackpadMenuItem";
+            this.viewTrackpadMenuItem.Size = new System.Drawing.Size(194, 22);
+            this.viewTrackpadMenuItem.Text = "Trackpad";
             // 
             // viewTrackpadRawMenuItem
             // 
-            viewTrackpadRawMenuItem.CheckOnClick = true;
-            viewTrackpadRawMenuItem.Name = "viewTrackpadRawMenuItem";
-            viewTrackpadRawMenuItem.Size = new Size(194, 22);
-            viewTrackpadRawMenuItem.Text = "Trackpad Surface (raw)";
+            this.viewTrackpadRawMenuItem.CheckOnClick = true;
+            this.viewTrackpadRawMenuItem.Name = "viewTrackpadRawMenuItem";
+            this.viewTrackpadRawMenuItem.Size = new System.Drawing.Size(194, 22);
+            this.viewTrackpadRawMenuItem.Text = "Trackpad Surface (raw)";
             // 
             // viewMenuSeparator
             // 
-            viewMenuSeparator.Name = "viewMenuSeparator";
-            viewMenuSeparator.Size = new Size(191, 6);
+            this.viewMenuSeparator.Name = "viewMenuSeparator";
+            this.viewMenuSeparator.Size = new System.Drawing.Size(191, 6);
             // 
             // viewKeyPressTextMenuItem
             // 
-            viewKeyPressTextMenuItem.CheckOnClick = true;
-            viewKeyPressTextMenuItem.Name = "viewKeyPressTextMenuItem";
-            viewKeyPressTextMenuItem.Size = new Size(194, 22);
-            viewKeyPressTextMenuItem.Text = "Key Press Text";
+            this.viewKeyPressTextMenuItem.CheckOnClick = true;
+            this.viewKeyPressTextMenuItem.Name = "viewKeyPressTextMenuItem";
+            this.viewKeyPressTextMenuItem.Size = new System.Drawing.Size(194, 22);
+            this.viewKeyPressTextMenuItem.Text = "Key Press Text";
             // 
             // viewKeyReleaseTextMenuItem
             // 
-            viewKeyReleaseTextMenuItem.CheckOnClick = true;
-            viewKeyReleaseTextMenuItem.Name = "viewKeyReleaseTextMenuItem";
-            viewKeyReleaseTextMenuItem.Size = new Size(194, 22);
-            viewKeyReleaseTextMenuItem.Text = "Key Release Text";
-            //
+            this.viewKeyReleaseTextMenuItem.CheckOnClick = true;
+            this.viewKeyReleaseTextMenuItem.Name = "viewKeyReleaseTextMenuItem";
+            this.viewKeyReleaseTextMenuItem.Size = new System.Drawing.Size(194, 22);
+            this.viewKeyReleaseTextMenuItem.Text = "Key Release Text";
+            // 
             // viewResetSeparator
-            //
-            viewResetSeparator.Name = "viewResetSeparator";
-            viewResetSeparator.Size = new Size(191, 6);
-            //
+            // 
+            this.viewResetSeparator.Name = "viewResetSeparator";
+            this.viewResetSeparator.Size = new System.Drawing.Size(191, 6);
+            // 
             // viewResetMenuItem
-            //
-            viewResetMenuItem.Name = "viewResetMenuItem";
-            viewResetMenuItem.Size = new Size(194, 22);
-            viewResetMenuItem.Text = "Reset";
-            viewResetMenuItem.ToolTipText = "Reset window size and device visibility to defaults";
-            //
+            // 
+            this.viewResetMenuItem.Name = "viewResetMenuItem";
+            this.viewResetMenuItem.Size = new System.Drawing.Size(194, 22);
+            this.viewResetMenuItem.Text = "Reset";
+            this.viewResetMenuItem.ToolTipText = "Reset window size and device visibility to defaults";
+            // 
             // boxesPanel
             // 
-            boxesPanel.AutoSize = true;
-            boxesPanel.AutoSizeMode = AutoSizeMode.GrowAndShrink;
-            boxesPanel.BackColor = Color.Transparent;
-            boxesPanel.Controls.Add(touchSurface);
-            boxesPanel.Controls.Add(trackpadSurface);
-            boxesPanel.Controls.Add(trackpadRawSurface);
-            boxesPanel.Location = new Point(0, 30);
-            boxesPanel.Margin = new Padding(0);
-            boxesPanel.Name = "boxesPanel";
-            boxesPanel.Size = new Size(860, 160);
-            boxesPanel.TabIndex = 7;
+            this.boxesPanel.AutoSize = true;
+            this.boxesPanel.AutoSizeMode = System.Windows.Forms.AutoSizeMode.GrowAndShrink;
+            this.boxesPanel.BackColor = System.Drawing.Color.Transparent;
+            this.boxesPanel.Controls.Add(this.touchSurface);
+            this.boxesPanel.Controls.Add(this.trackpadSurface);
+            this.boxesPanel.Controls.Add(this.trackpadRawSurface);
+            this.boxesPanel.Location = new System.Drawing.Point(0, 26);
+            this.boxesPanel.Margin = new System.Windows.Forms.Padding(0);
+            this.boxesPanel.Name = "boxesPanel";
+            this.boxesPanel.Size = new System.Drawing.Size(741, 139);
+            this.boxesPanel.TabIndex = 7;
             // 
             // Form1
             // 
-            AutoScaleDimensions = new SizeF(7F, 15F);
-            AutoScaleMode = AutoScaleMode.Font;
-            ClientSize = new Size(884, 561);
-            Controls.Add(boxesPanel);
-            Controls.Add(displayLabel);
-            Controls.Add(releaseLabel);
-            Controls.Add(mainMenuStrip);
-            Icon = (Icon)resources.GetObject("$this.Icon");
-            MainMenuStrip = mainMenuStrip;
-            Name = "Form1";
-            Text = "KeyPress";
-            trackpadSurface.ResumeLayout(false);
-            touchSurface.ResumeLayout(false);
-            trackpadRawSurface.ResumeLayout(false);
-            mainMenuStrip.ResumeLayout(false);
-            mainMenuStrip.PerformLayout();
-            boxesPanel.ResumeLayout(false);
-            ResumeLayout(false);
-            PerformLayout();
+            this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
+            this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
+            this.ClientSize = new System.Drawing.Size(932, 433);
+            this.Controls.Add(this.boxesPanel);
+            this.Controls.Add(this.displayLabel);
+            this.Controls.Add(this.releaseLabel);
+            this.Controls.Add(this.mainMenuStrip);
+            this.MainMenuStrip = this.mainMenuStrip;
+            this.Name = "Form1";
+            this.Text = "KeyPress";
+            this.trackpadSurface.ResumeLayout(false);
+            this.touchSurface.ResumeLayout(false);
+            this.trackpadRawSurface.ResumeLayout(false);
+            this.mainMenuStrip.ResumeLayout(false);
+            this.mainMenuStrip.PerformLayout();
+            this.boxesPanel.ResumeLayout(false);
+            this.ResumeLayout(false);
+            this.PerformLayout();
+
         }
 
         #endregion
