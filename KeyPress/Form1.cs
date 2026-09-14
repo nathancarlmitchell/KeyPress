@@ -1616,7 +1616,81 @@ namespace KeyPress
             // below, so the two clusters read as one grouped block.
             BuildMouseCluster(arrowX, shiftRowY);
 
-            keyboardGrid.Size = new Size(arrowX + 3 * KeyUnit, y);
+            // Navigation cluster (Insert/Home/PageUp over Delete/End/PageDown),
+            // aligned with the number and tab rows the way it sits on a real
+            // keyboard — one row below the top, one gap past the arrow/mouse
+            // column.
+            const float navGap = 0.5f;
+            int navX = (int)Math.Round((mainBlockWidth + arrowGap + 3f + navGap) * KeyUnit);
+            AddKeyRow(
+                navX,
+                KeyUnit,
+                rowHeight,
+                ("Ins", 1f, Keys.Insert),
+                ("Home", 1f, Keys.Home),
+                ("PgUp", 1f, Keys.PageUp)
+            );
+            AddKeyRow(
+                navX,
+                2 * KeyUnit,
+                rowHeight,
+                ("Del", 1f, Keys.Delete),
+                ("End", 1f, Keys.End),
+                ("PgDn", 1f, Keys.PageDown)
+            );
+
+            // Numpad, one more gap past the nav cluster. A plain uniform grid
+            // rather than real hardware's tall Enter/+ keys — this is a
+            // visualization, not a hardware replica, and reusing the same
+            // AddKeyRow every other cluster uses keeps it simple. NumPad
+            // Enter maps to the same Keys.Enter as the main Enter key (Windows
+            // reports them identically), so either one highlights both.
+            const float numpadGap = 0.5f;
+            int numpadX = (int)Math.Round((mainBlockWidth + arrowGap + 3f + navGap + 3f + numpadGap) * KeyUnit);
+            AddKeyRow(
+                numpadX,
+                0,
+                rowHeight,
+                ("Num", 1f, Keys.NumLock),
+                ("/", 1f, Keys.Divide),
+                ("*", 1f, Keys.Multiply),
+                ("-", 1f, Keys.Subtract)
+            );
+            AddKeyRow(
+                numpadX,
+                KeyUnit,
+                rowHeight,
+                ("7", 1f, Keys.NumPad7),
+                ("8", 1f, Keys.NumPad8),
+                ("9", 1f, Keys.NumPad9),
+                ("+", 1f, Keys.Add)
+            );
+            AddKeyRow(
+                numpadX,
+                2 * KeyUnit,
+                rowHeight,
+                ("4", 1f, Keys.NumPad4),
+                ("5", 1f, Keys.NumPad5),
+                ("6", 1f, Keys.NumPad6)
+            );
+            AddKeyRow(
+                numpadX,
+                3 * KeyUnit,
+                rowHeight,
+                ("1", 1f, Keys.NumPad1),
+                ("2", 1f, Keys.NumPad2),
+                ("3", 1f, Keys.NumPad3),
+                ("Enter", 1f, Keys.Enter)
+            );
+            AddKeyRow(
+                numpadX,
+                4 * KeyUnit,
+                rowHeight,
+                ("0", 2f, Keys.NumPad0),
+                (".", 1f, Keys.Decimal)
+            );
+
+            keyboardGrid.Size = new Size(numpadX + 4 * KeyUnit, y);
 
             keyboardPanel = new Panel
             {

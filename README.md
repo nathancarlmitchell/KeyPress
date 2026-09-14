@@ -55,9 +55,11 @@ touchpad) currently held down. When nothing is pressed it fades from full opacit
 contacts, scroll-wheel activity), fading out over ~1.4 seconds.
 
 **Virtual keyboard overlay** — sits between the two text lines and highlights each key in red the
-instant it's detected as pressed. A mouse cluster sits just above the arrow keys: Left/Right
-buttons flank a center strip with scroll-up/middle-click/scroll-down, all highlighting the same
-way (scroll indicators flash briefly, since wheel ticks are discrete rather than held).
+instant it's detected as pressed. Covers the full layout: main alphanumeric block, arrow cluster,
+a navigation block (Insert/Home/PageUp over Delete/End/PageDown), and a numpad. A mouse cluster
+sits just above the arrow keys: Left/Right buttons flank a center strip with
+scroll-up/middle-click/scroll-down, all highlighting the same way (scroll indicators flash
+briefly, since wheel ticks are discrete rather than held).
 
 **Position boxes**, shown across the top and toggleable individually from the View menu, each
 marked with a small icon for its device type:
