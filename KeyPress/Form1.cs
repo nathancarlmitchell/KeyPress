@@ -22,6 +22,12 @@ namespace KeyPress
         private Label mouseScrollUpLabel = null!;
         private Label mouseScrollDownLabel = null!;
         private readonly System.Windows.Forms.Timer scrollFlashTimer = new() { Interval = 220 };
+
+        // PrintScreen (and possibly other keys depending on hardware/drivers)
+        // never raises WM_KEYDOWN on Windows -- only KeyUp arrives. Flashing
+        // it briefly on that orphaned KeyUp is the fallback (see Form1_KeyUp).
+        private readonly System.Windows.Forms.Timer keyFlashTimer = new() { Interval = 150 };
+        private Keys? flashedKey;
         private Panel keyboardPanel = null!;
         private Panel keyboardGrid = null!;
         private static readonly Color KeyboardKeyBackColor = SystemColors.Window;
@@ -426,6 +432,16 @@ namespace KeyPress
                 SetScrollIndicatorActive(mouseScrollDownLabel, false);
             };
 
+            keyFlashTimer.Tick += (s, e) =>
+            {
+                keyFlashTimer.Stop();
+                if (flashedKey is Keys key)
+                {
+                    HighlightVirtualKey(key, false);
+                    flashedKey = null;
+                }
+            };
+
             Deactivate += (s, e) =>
             {
                 heldKeys.Clear();
@@ -435,6 +451,8 @@ namespace KeyPress
                 {
                     HighlightVirtualKey(key, false);
                 }
+                keyFlashTimer.Stop();
+                flashedKey = null;
                 foreach (MouseButtons button in keyboardMouseButtonLabels.Keys)
                 {
                     HighlightVirtualMouseButton(button, false);
@@ -1381,9 +1399,26 @@ namespace KeyPress
 
         private void Form1_KeyUp(object? sender, KeyEventArgs e)
         {
-            heldKeys.Remove(e.KeyCode);
-            HighlightVirtualKey(e.KeyCode, false);
+            if (heldKeys.Remove(e.KeyCode))
+            {
+                HighlightVirtualKey(e.KeyCode, false);
+            }
+            else
+            {
+                // PrintScreen is the well-known case: Windows never sends it a
+                // KeyDown, only this KeyUp, so heldKeys never saw it and the
+                // overlay never lit up. Flash it now instead of staying dark.
+                FlashVirtualKey(e.KeyCode);
+            }
             AddRelease(e.KeyCode.ToString());
+        }
+
+        private void FlashVirtualKey(Keys key)
+        {
+            HighlightVirtualKey(key, true);
+            flashedKey = key;
+            keyFlashTimer.Stop();
+            keyFlashTimer.Start();
         }
 
         // Driven by the raw WM_*BUTTONDOWN/UP messages in PreFilterMessage rather
