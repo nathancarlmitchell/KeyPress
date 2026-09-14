@@ -1619,9 +1619,18 @@ namespace KeyPress
             // Navigation cluster (Insert/Home/PageUp over Delete/End/PageDown),
             // aligned with the number and tab rows the way it sits on a real
             // keyboard — one row below the top, one gap past the arrow/mouse
-            // column.
+            // column. PrintScreen/ScrollLock/Pause sit in the gap above it,
+            // aligned with the function row.
             const float navGap = 0.5f;
             int navX = (int)Math.Round((mainBlockWidth + arrowGap + 3f + navGap) * KeyUnit);
+            AddKeyRow(
+                navX,
+                0,
+                rowHeight,
+                ("PrtSc", 1f, Keys.PrintScreen),
+                ("ScrLk", 1f, Keys.Scroll),
+                ("Pause", 1f, Keys.Pause)
+            );
             AddKeyRow(
                 navX,
                 KeyUnit,
