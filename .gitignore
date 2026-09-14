@@ -9,3 +9,6 @@
 
 # Debug logs / local artifacts
 *.log
+
+# Inno Setup build output
+installer/Output/

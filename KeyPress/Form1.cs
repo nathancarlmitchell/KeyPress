@@ -374,14 +374,14 @@ namespace KeyPress
             KeyDown += Form1_KeyDown;
             KeyUp += Form1_KeyUp;
 
-            // displayLabel is docked fill, so it receives the mouse events, not the form.
-            MouseDown += Form1_MouseDown;
-            MouseUp += Form1_MouseUp;
-            displayLabel.MouseDown += Form1_MouseDown;
-            displayLabel.MouseUp += Form1_MouseUp;
+            // Mouse buttons are handled via the raw WM_*BUTTONDOWN/UP messages in
+            // PreFilterMessage below, not WinForms MouseDown/MouseUp events — the
+            // position boxes and virtual keyboard are real child controls, so a
+            // click over any of them would otherwise be swallowed by that child
+            // and never reach the form.
 
-            // A message filter catches wheel / touch / gesture messages no matter
-            // which child window they are dispatched to.
+            // A message filter catches wheel / touch / gesture / button messages
+            // no matter which child window they are dispatched to.
             Application.AddMessageFilter(this);
 
             noticeTimer.Tick += (s, e) =>
@@ -458,6 +458,15 @@ namespace KeyPress
         }
 
         // ---- Win32 interop -------------------------------------------------------
+
+        private const int WM_LBUTTONDOWN = 0x0201;
+        private const int WM_LBUTTONUP = 0x0202;
+        private const int WM_RBUTTONDOWN = 0x0204;
+        private const int WM_RBUTTONUP = 0x0205;
+        private const int WM_MBUTTONDOWN = 0x0207;
+        private const int WM_MBUTTONUP = 0x0208;
+        private const int WM_XBUTTONDOWN = 0x020B;
+        private const int WM_XBUTTONUP = 0x020C;
 
         private const int WM_MOUSEWHEEL = 0x020A;
         private const int WM_MOUSEHWHEEL = 0x020E;
@@ -1131,6 +1140,31 @@ namespace KeyPress
         {
             switch (m.Msg)
             {
+                case WM_LBUTTONDOWN:
+                    OnMouseButtonDown(MouseButtons.Left);
+                    break;
+                case WM_LBUTTONUP:
+                    OnMouseButtonUp(MouseButtons.Left);
+                    break;
+                case WM_RBUTTONDOWN:
+                    OnMouseButtonDown(MouseButtons.Right);
+                    break;
+                case WM_RBUTTONUP:
+                    OnMouseButtonUp(MouseButtons.Right);
+                    break;
+                case WM_MBUTTONDOWN:
+                    OnMouseButtonDown(MouseButtons.Middle);
+                    break;
+                case WM_MBUTTONUP:
+                    OnMouseButtonUp(MouseButtons.Middle);
+                    break;
+                case WM_XBUTTONDOWN:
+                    OnMouseButtonDown(XButtonFromWParam(m.WParam));
+                    break;
+                case WM_XBUTTONUP:
+                    OnMouseButtonUp(XButtonFromWParam(m.WParam));
+                    break;
+
                 case WM_MOUSEWHEEL:
                 case WM_MOUSEHWHEEL:
                 {
@@ -1352,24 +1386,32 @@ namespace KeyPress
             AddRelease(e.KeyCode.ToString());
         }
 
-        private void Form1_MouseDown(object? sender, MouseEventArgs e)
+        // Driven by the raw WM_*BUTTONDOWN/UP messages in PreFilterMessage rather
+        // than WinForms MouseDown/MouseUp events, so a click lands here no matter
+        // which child control (a position box, a keyboard key, the mouse cluster)
+        // it was actually targeted at.
+        private void OnMouseButtonDown(MouseButtons button)
         {
-            if (!heldButtons.Contains(e.Button))
+            if (!heldButtons.Contains(button))
             {
-                heldButtons.Add(e.Button);
-                HighlightVirtualMouseButton(e.Button, true);
+                heldButtons.Add(button);
+                HighlightVirtualMouseButton(button, true);
                 UpdateDisplay();
             }
         }
 
-        private void Form1_MouseUp(object? sender, MouseEventArgs e)
+        private void OnMouseButtonUp(MouseButtons button)
         {
-            if (heldButtons.Remove(e.Button))
+            if (heldButtons.Remove(button))
             {
-                HighlightVirtualMouseButton(e.Button, false);
-                AddRelease(MouseButtonName(e.Button));
+                HighlightVirtualMouseButton(button, false);
+                AddRelease(MouseButtonName(button));
             }
         }
+
+        // HIWORD(wParam) is 1 for XBUTTON1, 2 for XBUTTON2 on WM_XBUTTONDOWN/UP.
+        private static MouseButtons XButtonFromWParam(IntPtr wParam) =>
+            ((long)wParam >> 16 & 0xFFFF) == 1 ? MouseButtons.XButton1 : MouseButtons.XButton2;
 
         // Maps a point onto a box acting as a miniature of some coordinate space
         // (the whole screen, or a touchpad's raw sensor grid): the dot's position
